@@ -35,15 +35,39 @@ function addTask() {
     taskInput.focus();
 }
 
+// Toggle task completion
+function toggleTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+        task.completed = !task.completed;
+
+        // Update DOM
+        const li = document.querySelector(`li[data-id="${id}"]`);
+        if (li) {
+            li.classList.toggle('completed', task.completed);
+        }
+    }
+}
+
 // Render a single task to the DOM
 function renderTask(task) {
     const li = document.createElement('li');
     li.dataset.id = task.id;
 
+    // Apply completed class if task is already completed
+    if (task.completed) {
+        li.classList.add('completed');
+    }
+
     // Task text span
     const taskText = document.createElement('span');
     taskText.className = 'task-text';
     taskText.textContent = task.text;
+
+    // Click on task text to toggle completion
+    taskText.addEventListener('click', function() {
+        toggleTask(task.id);
+    });
 
     // Delete button
     const deleteBtn = document.createElement('button');
