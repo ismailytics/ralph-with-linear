@@ -167,10 +167,17 @@ For stories with testable logic, also include:
 "Tests pass"
 ```
 
+### For stories with testable business logic (optional):
+```
+"Tests written first (TDD)"
+```
+Use this when the story involves complex logic, algorithms, or API contracts that benefit from test-first development.
+
 ### For stories that change UI, also include:
 ```
-"Verify in browser using dev-browser skill"
+"Verify in browser"
 ```
+(The agent will auto-select Playwright MCP or dev-browser based on availability)
 
 ---
 
@@ -181,7 +188,8 @@ Before creating in Linear, verify:
 - [ ] Each story is completable in one iteration (small enough)
 - [ ] Stories are ordered by dependency (schema → backend → UI)
 - [ ] Every story has "Typecheck passes" as criterion
-- [ ] UI stories have "Verify in browser using dev-browser skill"
+- [ ] UI stories have "Verify in browser"
+- [ ] Stories with complex logic considered for "Tests written first (TDD)"
 - [ ] Acceptance criteria are verifiable (not vague)
 - [ ] No story depends on a later story
 

@@ -142,7 +142,8 @@ Each story needs:
 
 **Important:**
 - Acceptance criteria must be verifiable, not vague. "Works correctly" is bad. "Button shows confirmation dialog before deleting" is good.
-- **For any story with UI changes:** Always include "Verify in browser using dev-browser skill" as acceptance criteria.
+- **For any story with UI changes:** Always include "Verify in browser" as acceptance criteria. (The agent will auto-select Playwright MCP or dev-browser based on availability)
+- **For stories with testable logic (optional):** Consider adding "Tests written first (TDD)" as acceptance criteria when the story involves complex business logic, algorithms, or API contracts.
 - **ALL stories:** Must include "Typecheck passes" as final criterion.
 
 ---
@@ -232,6 +233,7 @@ Before finishing:
 - [ ] Issues have correct priority (1-4 based on order)
 - [ ] All stories include "Typecheck passes" criterion
 - [ ] UI stories include "Verify in browser" criterion
+- [ ] Stories with complex logic considered for "Tests written first (TDD)" criterion
 - [ ] Stories are small enough for one iteration
 - [ ] Stories are ordered by dependencies
 - [ ] Saved `.ralph-project` configuration

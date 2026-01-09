@@ -79,3 +79,31 @@ npm run dev
 - Branch name is stored in first line of Linear project description: `Branch: ralph/<feature>`
 - Issue status flow: Todo → In Progress → Done
 - Learnings are added as comments to completed issues
+
+## Testing Patterns
+
+### Browser Testing Tool Selection
+
+Ralph auto-detects available browser testing tools:
+
+1. **Check for Playwright MCP**: Look for `mcp__playwright__*` tools
+2. **If available**: Use Playwright for automated E2E assertions
+3. **If not available**: Fall back to `dev-browser` skill for manual verification
+
+Always document which tool was used in the Linear issue comment.
+
+### TDD Workflow
+
+When acceptance criteria include "Tests written first (TDD)":
+
+```
+RED:      Write failing test → Commit "test: [Issue-ID] - Add failing test for [feature]"
+GREEN:    Implement minimum code → Do not commit yet
+REFACTOR: Clean up code → Commit "feat: [Issue-ID] - [Feature Title]"
+```
+
+### Test File Patterns
+
+- Unit tests: `*.test.ts` or `*.spec.ts` next to source file
+- E2E tests: `e2e/*.spec.ts` or `tests/*.spec.ts`
+- Follow existing test patterns in the project

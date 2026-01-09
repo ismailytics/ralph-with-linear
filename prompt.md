@@ -105,14 +105,49 @@ Only update AGENTS.md if you have **genuinely reusable knowledge** that would he
 - Keep changes focused and minimal
 - Follow existing code patterns
 
+## Test-Driven Development (Optional)
+
+If acceptance criteria include "Tests written first (TDD)", follow this workflow:
+
+### TDD Cycle
+
+1. **RED** - Write failing test based on acceptance criteria
+   - Run test suite to confirm test fails
+   - Commit: `test: [Issue-ID] - Add failing test for [feature]`
+
+2. **GREEN** - Write minimum implementation to pass test
+   - Run test suite to confirm all tests pass
+
+3. **REFACTOR** - Clean up code while keeping tests green
+   - Commit: `feat: [Issue-ID] - [Feature Title]`
+
+### When to Use TDD
+
+Recommended for: Complex business logic, utility functions, APIs
+Optional for: Simple UI changes, configuration, documentation
+
 ## Browser Testing (Required for Frontend Stories)
 
 For any story that changes UI (check acceptance criteria for "Verify in browser"):
 
-1. Load the `dev-browser` skill
-2. Navigate to the relevant page
-3. Verify the UI changes work as expected
-4. Take a screenshot if helpful
+### Tool Selection (Auto-Detect)
+
+Check which browser testing tools are available:
+
+1. **If Playwright MCP is available** (`mcp__playwright__*` tools exist):
+   - Use Playwright for automated E2E testing
+   - Write assertions that verify the acceptance criteria
+
+2. **If Playwright MCP is NOT available** (fallback):
+   - Load the `dev-browser` skill
+   - Navigate to the relevant page manually
+   - Verify the UI changes visually
+
+### Verification Steps
+
+1. Navigate to the relevant page
+2. Verify all UI acceptance criteria
+3. Document which tool was used in the Linear issue comment
 
 A frontend story is NOT complete until browser verification passes.
 
