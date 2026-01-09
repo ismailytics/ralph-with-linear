@@ -16,7 +16,6 @@ Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
 - [Claude Code CLI](https://docs.anthropic.com/claude-code) installed and authenticated
 - [Linear MCP](https://linear.app/docs/mcp) configured in your MCP settings
-- `jq` installed (`brew install jq` on macOS)
 - A git repository for your project
 
 ## Setup
