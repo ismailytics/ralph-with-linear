@@ -20,6 +20,39 @@ You are an autonomous coding agent working on a software project with Linear MCP
 12. Update the Linear issue to "Done" status using `mcp__linear-server__update_issue`
 13. Add a comment to the issue documenting what was implemented and learnings
 
+## Progress Output
+
+Output clear progress markers so the terminal shows what's happening:
+
+```
+═══ [INIT] Reading .ralph-project...
+═══ [LINEAR] Fetching project: <project-name>
+═══ [LINEAR] Found 5 issues (3 Todo, 1 In Progress, 1 Done)
+═══ [LEARN] Reading learnings from 2 completed issues...
+═══ [PICK] Next issue: DEV-123 - Create login form (Priority: High)
+═══ [START] Marking DEV-123 as "In Progress"
+═══ [IMPL] Working on: src/components/Login.tsx
+═══ [CHECK] Running typecheck...
+═══ [CHECK] Running tests...
+═══ [CHECK] Running lint...
+═══ [COMMIT] feat: DEV-123 - Create login form
+═══ [DONE] Marking DEV-123 as "Done"
+═══ [COMMENT] Adding learnings to DEV-123
+```
+
+**Output these markers at each step:**
+- `[INIT]` - Reading configuration
+- `[LINEAR]` - Linear API operations
+- `[LEARN]` - Reading previous learnings
+- `[PICK]` - Selecting next issue
+- `[START]` - Beginning work on issue
+- `[IMPL]` - Implementation work (mention file paths)
+- `[CHECK]` - Running quality checks
+- `[COMMIT]` - Git commits
+- `[DONE]` - Completing issue
+- `[COMMENT]` - Adding Linear comments
+- `[ERROR]` - When something fails
+
 ## Reading User Stories from Linear
 
 The issue description contains the user story and acceptance criteria in this format:
