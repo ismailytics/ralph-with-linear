@@ -36,13 +36,15 @@ cp /path/to/ralph/setup-prompt.md scripts/ralph/
 chmod +x scripts/ralph/ralph.sh
 ```
 
-### 3. Install skills globally (optional)
+### 3. Install skills (included in `.claude/skills/`)
 
-Copy the skills to your Claude Code config for use across all projects:
+Skills are already included in this repo at `.claude/skills/`. Claude Code automatically discovers them.
+
+To install globally for use across all projects:
 
 ```bash
-cp -r skills/prd ~/.claude/skills/
-cp -r skills/ralph ~/.claude/skills/
+cp -r .claude/skills/prd ~/.claude/skills/
+cp -r .claude/skills/ralph ~/.claude/skills/
 ```
 
 Claude Code automatically compacts context when it fills up, so no additional configuration is needed.
@@ -51,11 +53,13 @@ Claude Code automatically compacts context when it fills up, so no additional co
 
 ### 1. Create a PRD
 
-Use the PRD skill to generate a detailed requirements document directly in Linear:
+Use the `/prd` skill to generate a detailed requirements document directly in Linear:
 
 ```
-Load the prd skill and create a PRD for [your feature description]
+/prd [your feature description]
 ```
+
+Or simply describe what you want to build - Claude Code will automatically invoke the skill.
 
 Answer the clarifying questions. The skill will:
 - Create a Linear project with the PRD as description
@@ -64,10 +68,10 @@ Answer the clarifying questions. The skill will:
 
 ### 2. Or convert an existing PRD
 
-If you have an existing markdown PRD, use the Ralph skill to convert it:
+If you have an existing markdown PRD, use the `/ralph` skill to convert it:
 
 ```
-Load the ralph skill and convert tasks/prd-[feature-name].md to Linear
+/ralph tasks/prd-[feature-name].md
 ```
 
 This creates a Linear project and issues from your markdown PRD.
@@ -117,8 +121,8 @@ Ralph will:
 | `prompt.md` | Instructions given to each Claude Code instance |
 | `setup-prompt.md` | Interactive setup for Linear project selection |
 | `.ralph-project` | Local config with Linear project ID (gitignored) |
-| `skills/prd/` | Skill for generating PRDs in Linear |
-| `skills/ralph/` | Skill for converting markdown PRDs to Linear |
+| `.claude/skills/prd/` | Skill for generating PRDs in Linear (`/prd`) |
+| `.claude/skills/ralph/` | Skill for converting markdown PRDs to Linear (`/ralph`) |
 | `flowchart/` | Interactive visualization of how Ralph works |
 
 ## Linear Integration

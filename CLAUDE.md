@@ -29,6 +29,34 @@ cd flowchart && npm run build
 - `setup-prompt.md` - Interactive Linear project selection
 - `.ralph-project` - Local config with Linear project ID (gitignored)
 - `flowchart/` - Interactive React Flow diagram explaining how Ralph works
+- `.claude/skills/prd/SKILL.md` - PRD generation skill
+- `.claude/skills/ralph/SKILL.md` - PRD-to-Linear converter skill
+
+## Creating a PRD
+
+**When to use:** When a user wants to plan a new feature, start a project, or asks for a PRD/spec/requirements.
+
+**Trigger phrases:** "create a prd", "write prd for", "plan this feature", "requirements for", "spec out"
+
+**How to create a PRD:**
+
+1. **Use the `/prd` skill** - This is the standard flow for creating PRDs
+2. The skill will guide you through:
+   - Asking 3-5 clarifying questions (with A/B/C/D options)
+   - Selecting a Linear team
+   - Creating a Linear project with PRD in description
+   - Creating Linear issues for each user story
+   - Saving `.ralph-project` configuration
+
+**Key rules:**
+- Project description MUST start with `Branch: ralph/<feature-name>`
+- Issues are ordered by dependencies (DB → Backend → UI → Dashboards)
+- Priority maps to story order (1st=Urgent, 2nd=High, 3rd=Normal, 4th+=Low)
+- All stories must include "Typecheck passes" as acceptance criterion
+- UI stories must include "Verify in browser" criterion
+- Stories must be small enough for one context window
+
+See `skills/prd/SKILL.md` for full details.
 
 ## Linear MCP Integration
 

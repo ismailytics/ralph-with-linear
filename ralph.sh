@@ -50,7 +50,8 @@ if [ ! -f "$PROJECT_FILE" ]; then
   echo ""
 
   # Run Claude Code with setup prompt to create .ralph-project
-  run_claude "$SCRIPT_DIR/setup-prompt.md"
+  # Setup runs interactively (no -p flag) so user can answer questions
+  claude --dangerously-skip-permissions "$SCRIPT_DIR/setup-prompt.md"
 
   # Verify .ralph-project was created
   if [ ! -f "$PROJECT_FILE" ]; then
