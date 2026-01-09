@@ -166,9 +166,9 @@ Future iterations read these comments to learn from past work.
 
 ## Flowchart
 
-[![Ralph Flowchart](ralph-flowchart.png)](https://snarktank.github.io/ralph/)
+[![Ralph Flowchart](ralph-flowchart.png)](https://ismailytics.github.io/ralph-with-linear/)
 
-**[View Interactive Flowchart](https://snarktank.github.io/ralph/)** - Click through to see each step with animations.
+**[View Interactive Flowchart](https://ismailytics.github.io/ralph-with-linear/)** - Click through to see each step with animations.
 
 The `flowchart/` directory contains the source code. To run locally:
 
