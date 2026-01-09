@@ -1,11 +1,13 @@
 ---
 name: prd
-description: "Generate a Product Requirements Document (PRD) for a new feature. Use when planning a feature, starting a new project, or when asked to create a PRD. Triggers on: create a prd, write prd for, plan this feature, requirements for, spec out."
+description: "Generate a Product Requirements Document (PRD) as a Linear project with issues. Use when planning a feature, starting a new project, or when asked to create a PRD. Triggers on: create a prd, write prd for, plan this feature, requirements for, spec out."
 ---
 
-# PRD Generator
+# PRD Generator (Linear MCP Integration)
 
-Create detailed Product Requirements Documents that are clear, actionable, and suitable for implementation.
+Create Product Requirements Documents directly in Linear as a project with issues. This enables seamless integration with Ralph for autonomous implementation.
+
+**Prerequisites:** Linear MCP must be configured. See https://linear.app/docs/mcp
 
 ---
 
@@ -13,10 +15,12 @@ Create detailed Product Requirements Documents that are clear, actionable, and s
 
 1. Receive a feature description from the user
 2. Ask 3-5 essential clarifying questions (with lettered options)
-3. Generate a structured PRD based on answers
-4. Save to `tasks/prd-[feature-name].md`
+3. Select a Linear team (interactively)
+4. Create a Linear project with the PRD as description
+5. Create Linear issues for each user story
+6. Save local `.ralph-project` configuration
 
-**Important:** Do NOT start implementing. Just create the PRD.
+**Important:** Do NOT start implementing. Just create the PRD in Linear.
 
 ---
 
@@ -55,67 +59,110 @@ This lets users respond with "1A, 2C, 3B" for quick iteration.
 
 ---
 
-## Step 2: PRD Structure
+## Step 2: Select Linear Team
 
-Generate the PRD with these sections:
+Use `mcp__linear-server__list_teams` to get available teams and ask the user which team to use.
 
-### 1. Introduction/Overview
-Brief description of the feature and the problem it solves.
+---
 
-### 2. Goals
-Specific, measurable objectives (bullet list).
+## Step 3: Create Linear Project
 
-### 3. User Stories
+Use `mcp__linear-server__create_project` with the PRD content:
+
+```json
+{
+  "name": "<Feature Name>",
+  "team": "<team-id-or-name>",
+  "description": "Branch: ralph/<feature-name-kebab-case>\n\n# <Feature Name>\n\n## Overview\n<Brief description>\n\n## Goals\n- Goal 1\n- Goal 2\n\n## Functional Requirements\n- FR-1: ...\n- FR-2: ...\n\n## Non-Goals\n- Non-goal 1\n\n## Technical Considerations\n- Notes...\n\n## Success Metrics\n- Metric 1",
+  "state": "planned"
+}
+```
+
+**Critical:** The first line of the description MUST be `Branch: ralph/<feature-name>` for Ralph to identify the correct git branch.
+
+---
+
+## Step 4: Create Linear Issues
+
+For each user story, use `mcp__linear-server__create_issue`:
+
+```json
+{
+  "title": "US-001: <Story Title>",
+  "team": "<team-id-or-name>",
+  "project": "<project-name-or-id>",
+  "description": "As a <user>, I want <feature> so that <benefit>.\n\n## Acceptance Criteria\n- [ ] Criterion 1\n- [ ] Criterion 2\n- [ ] Typecheck passes",
+  "priority": 1,
+  "state": "Todo"
+}
+```
+
+### Priority Mapping
+
+Create issues in dependency order. Map story position to Linear priority:
+
+| Story Position | Linear Priority |
+|----------------|-----------------|
+| 1st (first)    | 1 (Urgent)      |
+| 2nd            | 2 (High)        |
+| 3rd            | 3 (Normal)      |
+| 4th and later  | 4 (Low)         |
+
+### Issue Ordering Rules
+
+Stories should be ordered by dependencies:
+1. Database/Schema changes first
+2. Backend/API logic second
+3. UI components that use the backend third
+4. Dashboards/aggregations last
+
+---
+
+## Step 5: Save Local Configuration
+
+Create `.ralph-project` in the Ralph directory:
+
+```json
+{
+  "linearProjectId": "<project-id-from-step-3>",
+  "branchName": "ralph/<feature-name>"
+}
+```
+
+Use the Write tool to save this file.
+
+---
+
+## User Story Format
+
 Each story needs:
 - **Title:** Short descriptive name
 - **Description:** "As a [user], I want [feature] so that [benefit]"
 - **Acceptance Criteria:** Verifiable checklist of what "done" means
 
-Each story should be small enough to implement in one focused session.
-
-**Format:**
-```markdown
-### US-001: [Title]
-**Description:** As a [user], I want [feature] so that [benefit].
-
-**Acceptance Criteria:**
-- [ ] Specific verifiable criterion
-- [ ] Another criterion
-- [ ] Typecheck/lint passes
-- [ ] **[UI stories only]** Verify in browser using dev-browser skill
-```
-
-**Important:** 
+**Important:**
 - Acceptance criteria must be verifiable, not vague. "Works correctly" is bad. "Button shows confirmation dialog before deleting" is good.
-- **For any story with UI changes:** Always include "Verify in browser using dev-browser skill" as acceptance criteria. This ensures visual verification of frontend work.
+- **For any story with UI changes:** Always include "Verify in browser using dev-browser skill" as acceptance criteria.
+- **ALL stories:** Must include "Typecheck passes" as final criterion.
 
-### 4. Functional Requirements
-Numbered list of specific functionalities:
-- "FR-1: The system must allow users to..."
-- "FR-2: When a user clicks X, the system must..."
+---
 
-Be explicit and unambiguous.
+## Story Size Guidelines
 
-### 5. Non-Goals (Out of Scope)
-What this feature will NOT include. Critical for managing scope.
+Each story must be completable in ONE Ralph iteration (one context window). Right-sized stories:
 
-### 6. Design Considerations (Optional)
-- UI/UX requirements
-- Link to mockups if available
-- Relevant existing components to reuse
+**Good (single iteration):**
+- Add a database column and migration
+- Add a UI component to an existing page
+- Update a server action with new logic
+- Add a filter dropdown to a list
 
-### 7. Technical Considerations (Optional)
-- Known constraints or dependencies
-- Integration points with existing systems
-- Performance requirements
+**Too large (split these):**
+- "Build the entire dashboard"
+- "Add authentication"
+- "Refactor the API"
 
-### 8. Success Metrics
-How will success be measured?
-- "Reduce time to complete X by 50%"
-- "Increase conversion rate by 10%"
-
-### 9. Open Questions
-Remaining questions or areas needing clarification.
+**Rule of thumb:** If you can't describe the change in 2-3 sentences, it's too big.
 
 ---
 
@@ -131,110 +178,60 @@ The PRD reader may be a junior developer or AI agent. Therefore:
 
 ---
 
-## Output
+## Output Summary
 
-- **Format:** Markdown (`.md`)
-- **Location:** `tasks/`
-- **Filename:** `prd-[feature-name].md` (kebab-case)
+After creating everything, show the user:
+
+```
+Created Linear Project: <Project Name>
+Project ID: <uuid>
+Branch: ralph/<feature-name>
+
+Created Issues:
+- <TEAM>-123: US-001: <Title> (Urgent)
+- <TEAM>-124: US-002: <Title> (High)
+- <TEAM>-125: US-003: <Title> (Normal)
+- <TEAM>-126: US-004: <Title> (Low)
+
+Saved .ralph-project configuration.
+
+To start Ralph:
+  ./ralph.sh [max_iterations]
+```
 
 ---
 
-## Example PRD
+## Example
 
-```markdown
-# PRD: Task Priority System
+**User request:** "Create a PRD for adding task priority to our todo app"
 
-## Introduction
+**After clarifying questions, creates:**
 
-Add priority levels to tasks so users can focus on what matters most. Tasks can be marked as high, medium, or low priority, with visual indicators and filtering to help users manage their workload effectively.
+1. **Linear Project:** "Task Priority System"
+   - Description contains full PRD with `Branch: ralph/task-priority` on first line
 
-## Goals
+2. **Linear Issues:**
+   - `TEAM-101`: US-001: Add priority field to database (Urgent)
+   - `TEAM-102`: US-002: Display priority indicator on task cards (High)
+   - `TEAM-103`: US-003: Add priority selector to task edit (Normal)
+   - `TEAM-104`: US-004: Filter tasks by priority (Low)
 
-- Allow assigning priority (high/medium/low) to any task
-- Provide clear visual differentiation between priority levels
-- Enable filtering and sorting by priority
-- Default new tasks to medium priority
-
-## User Stories
-
-### US-001: Add priority field to database
-**Description:** As a developer, I need to store task priority so it persists across sessions.
-
-**Acceptance Criteria:**
-- [ ] Add priority column to tasks table: 'high' | 'medium' | 'low' (default 'medium')
-- [ ] Generate and run migration successfully
-- [ ] Typecheck passes
-
-### US-002: Display priority indicator on task cards
-**Description:** As a user, I want to see task priority at a glance so I know what needs attention first.
-
-**Acceptance Criteria:**
-- [ ] Each task card shows colored priority badge (red=high, yellow=medium, gray=low)
-- [ ] Priority visible without hovering or clicking
-- [ ] Typecheck passes
-- [ ] Verify in browser using dev-browser skill
-
-### US-003: Add priority selector to task edit
-**Description:** As a user, I want to change a task's priority when editing it.
-
-**Acceptance Criteria:**
-- [ ] Priority dropdown in task edit modal
-- [ ] Shows current priority as selected
-- [ ] Saves immediately on selection change
-- [ ] Typecheck passes
-- [ ] Verify in browser using dev-browser skill
-
-### US-004: Filter tasks by priority
-**Description:** As a user, I want to filter the task list to see only high-priority items when I'm focused.
-
-**Acceptance Criteria:**
-- [ ] Filter dropdown with options: All | High | Medium | Low
-- [ ] Filter persists in URL params
-- [ ] Empty state message when no tasks match filter
-- [ ] Typecheck passes
-- [ ] Verify in browser using dev-browser skill
-
-## Functional Requirements
-
-- FR-1: Add `priority` field to tasks table ('high' | 'medium' | 'low', default 'medium')
-- FR-2: Display colored priority badge on each task card
-- FR-3: Include priority selector in task edit modal
-- FR-4: Add priority filter dropdown to task list header
-- FR-5: Sort by priority within each status column (high to medium to low)
-
-## Non-Goals
-
-- No priority-based notifications or reminders
-- No automatic priority assignment based on due date
-- No priority inheritance for subtasks
-
-## Technical Considerations
-
-- Reuse existing badge component with color variants
-- Filter state managed via URL search params
-- Priority stored in database, not computed
-
-## Success Metrics
-
-- Users can change priority in under 2 clicks
-- High-priority tasks immediately visible at top of lists
-- No regression in task list performance
-
-## Open Questions
-
-- Should priority affect task ordering within a column?
-- Should we add keyboard shortcuts for priority changes?
-```
+3. **Local file:** `.ralph-project` with project ID and branch name
 
 ---
 
 ## Checklist
 
-Before saving the PRD:
+Before finishing:
 
 - [ ] Asked clarifying questions with lettered options
-- [ ] Incorporated user's answers
-- [ ] User stories are small and specific
-- [ ] Functional requirements are numbered and unambiguous
-- [ ] Non-goals section defines clear boundaries
-- [ ] Saved to `tasks/prd-[feature-name].md`
+- [ ] Selected Linear team
+- [ ] Created Linear project with PRD in description
+- [ ] Project description starts with `Branch: ralph/<feature-name>`
+- [ ] Created issues for all user stories
+- [ ] Issues have correct priority (1-4 based on order)
+- [ ] All stories include "Typecheck passes" criterion
+- [ ] UI stories include "Verify in browser" criterion
+- [ ] Stories are small enough for one iteration
+- [ ] Stories are ordered by dependencies
+- [ ] Saved `.ralph-project` configuration

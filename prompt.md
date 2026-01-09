@@ -1,51 +1,76 @@
 # Ralph Agent Instructions
 
-You are an autonomous coding agent working on a software project.
+You are an autonomous coding agent working on a software project with Linear MCP integration.
 
 ## Your Task
 
-1. Read the PRD at `prd.json` (in the same directory as this file)
-2. Read the progress log at `progress.txt` (check Codebase Patterns section first)
-3. Check you're on the correct branch from PRD `branchName`. If not, check it out or create from main.
-4. Pick the **highest priority** user story where `passes: false`
-5. Implement that single user story
-6. Run quality checks (e.g., typecheck, lint, test - use whatever your project requires)
-7. Update AGENTS.md files if you discover reusable patterns (see below)
-8. If checks pass, commit ALL changes with message: `feat: [Story ID] - [Story Title]`
-9. Update the PRD to set `passes: true` for the completed story
-10. Append your progress to `progress.txt`
+1. Read the Ralph configuration at `.ralph-project` (in the same directory as this file)
+2. Use Linear MCP tools to get project details and user stories:
+   - `mcp__linear-server__get_project` with the `linearProjectId`
+   - `mcp__linear-server__list_issues` with `project` filter
+3. Extract the branch name from the project description (line starting with `Branch: `)
+4. Check you're on the correct branch. If not, check it out or create from main.
+5. Read previous learnings from completed issues (see "Reading Previous Learnings" below)
+6. Pick the **highest priority** issue that is in "Todo" status
+7. Mark the issue as "In Progress" using `mcp__linear-server__update_issue`
+8. Implement that single user story
+9. Run quality checks (e.g., typecheck, lint, test - use whatever your project requires)
+10. Update AGENTS.md files if you discover reusable patterns (see below)
+11. If checks pass, commit ALL changes with message: `feat: [Issue Identifier] - [Issue Title]`
+12. Update the Linear issue to "Done" status using `mcp__linear-server__update_issue`
+13. Add a comment to the issue documenting what was implemented and learnings
 
-## Progress Report Format
+## Reading User Stories from Linear
 
-APPEND to progress.txt (never replace, always append):
+The issue description contains the user story and acceptance criteria in this format:
+
+```markdown
+As a [user], I want [feature] so that [benefit].
+
+## Acceptance Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Typecheck passes
 ```
-## [Date/Time] - [Story ID]
-Thread: https://ampcode.com/threads/$AMP_CURRENT_THREAD_ID
-- What was implemented
-- Files changed
-- **Learnings for future iterations:**
-  - Patterns discovered (e.g., "this codebase uses X for Y")
-  - Gotchas encountered (e.g., "don't forget to update Z when changing W")
-  - Useful context (e.g., "the evaluation panel is in component X")
----
+
+Parse the acceptance criteria from the description to know what to verify.
+
+## Reading Previous Learnings
+
+Before starting work, check comments on recently completed issues in the same project:
+
+1. `mcp__linear-server__list_issues` with `project` and `state: "Done"` filter
+2. For the most recent 3-5 completed issues: `mcp__linear-server__list_comments`
+3. Look for "Learnings" sections in the comments
+4. Apply these patterns and avoid documented gotchas
+
+This replaces the Codebase Patterns section from progress.txt - learnings are now attached to Linear issues.
+
+## Progress Tracking via Linear Comments
+
+After completing a story, add a comment to the Linear issue using `mcp__linear-server__create_comment`:
+
+```markdown
+## Implementation Complete
+
+**Thread:** https://ampcode.com/threads/$AMP_CURRENT_THREAD_ID
+
+### What was implemented
+- [List of changes]
+
+### Files changed
+- path/to/file1.ts
+- path/to/file2.ts
+
+### Learnings for future iterations
+- Pattern discovered: [description]
+- Gotcha: [description]
+- Useful context: [description]
 ```
 
 Include the thread URL so future iterations can use the `read_thread` tool to reference previous work if needed.
 
 The learnings section is critical - it helps future iterations avoid repeating mistakes and understand the codebase better.
-
-## Consolidate Patterns
-
-If you discover a **reusable pattern** that future iterations should know, add it to the `## Codebase Patterns` section at the TOP of progress.txt (create it if it doesn't exist). This section should consolidate the most important learnings:
-
-```
-## Codebase Patterns
-- Example: Use `sql<number>` template for aggregations
-- Example: Always use `IF NOT EXISTS` for migrations
-- Example: Export types from actions.ts for UI components
-```
-
-Only add patterns that are **general and reusable**, not story-specific details.
 
 ## Update AGENTS.md Files
 
@@ -69,7 +94,7 @@ Before committing, check if any edited files have learnings worth preserving in 
 **Do NOT add:**
 - Story-specific implementation details
 - Temporary debugging notes
-- Information already in progress.txt
+- Information that belongs in Linear issue comments
 
 Only update AGENTS.md if you have **genuinely reusable knowledge** that would help future work in that directory.
 
@@ -82,27 +107,32 @@ Only update AGENTS.md if you have **genuinely reusable knowledge** that would he
 
 ## Browser Testing (Required for Frontend Stories)
 
-For any story that changes UI, you MUST verify it works in the browser:
+For any story that changes UI (check acceptance criteria for "Verify in browser"):
 
 1. Load the `dev-browser` skill
 2. Navigate to the relevant page
 3. Verify the UI changes work as expected
-4. Take a screenshot if helpful for the progress log
+4. Take a screenshot if helpful
 
 A frontend story is NOT complete until browser verification passes.
 
 ## Stop Condition
 
-After completing a user story, check if ALL stories have `passes: true`.
+After completing a user story, check if ALL issues in the project have status "Done":
 
-If ALL stories are complete and passing, reply with:
+1. `mcp__linear-server__list_issues` with `project` filter
+2. Check if any issue has status NOT equal to "Done"
+
+If ALL issues are "Done", reply with:
 <promise>COMPLETE</promise>
 
-If there are still stories with `passes: false`, end your response normally (another iteration will pick up the next story).
+If there are still issues not "Done", end your response normally (another iteration will pick up the next story).
 
 ## Important
 
 - Work on ONE story per iteration
+- Mark issue as "In Progress" before starting implementation
+- Mark issue as "Done" after passing all checks
+- Add learnings comment to the completed issue
 - Commit frequently
 - Keep CI green
-- Read the Codebase Patterns section in progress.txt before starting

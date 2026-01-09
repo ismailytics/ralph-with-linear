@@ -2,7 +2,7 @@
 
 ![Ralph](ralph.webp)
 
-Ralph is an autonomous AI agent loop that runs [Amp](https://ampcode.com) repeatedly until all PRD items are complete. Each iteration is a fresh Amp instance with clean context. Memory persists via git history, `progress.txt`, and `prd.json`.
+Ralph is an autonomous AI agent loop that runs [Amp](https://ampcode.com) repeatedly until all PRD items are complete. Each iteration is a fresh Amp instance with clean context. Memory persists via git history and Linear (projects, issues, and comments).
 
 Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
@@ -11,24 +11,28 @@ Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 ## Prerequisites
 
 - [Amp CLI](https://ampcode.com) installed and authenticated
+- [Linear MCP](https://linear.app/docs/mcp) configured in your MCP settings
 - `jq` installed (`brew install jq` on macOS)
 - A git repository for your project
 
 ## Setup
 
-### Option 1: Copy to your project
+### 1. Configure Linear MCP
 
-Copy the ralph files into your project:
+Follow the [Linear MCP documentation](https://linear.app/docs/mcp) to set up the Linear MCP server. This enables Ralph to read and write Linear projects and issues.
+
+### 2. Copy Ralph to your project
 
 ```bash
 # From your project root
 mkdir -p scripts/ralph
 cp /path/to/ralph/ralph.sh scripts/ralph/
 cp /path/to/ralph/prompt.md scripts/ralph/
+cp /path/to/ralph/setup-prompt.md scripts/ralph/
 chmod +x scripts/ralph/ralph.sh
 ```
 
-### Option 2: Install skills globally
+### 3. Install skills globally (optional)
 
 Copy the skills to your Amp config for use across all projects:
 
@@ -37,7 +41,7 @@ cp -r skills/prd ~/.config/amp/skills/
 cp -r skills/ralph ~/.config/amp/skills/
 ```
 
-### Configure Amp auto-handoff (recommended)
+### 4. Configure Amp auto-handoff (recommended)
 
 Add to `~/.config/amp/settings.json`:
 
@@ -53,23 +57,26 @@ This enables automatic handoff when context fills up, allowing Ralph to handle l
 
 ### 1. Create a PRD
 
-Use the PRD skill to generate a detailed requirements document:
+Use the PRD skill to generate a detailed requirements document directly in Linear:
 
 ```
 Load the prd skill and create a PRD for [your feature description]
 ```
 
-Answer the clarifying questions. The skill saves output to `tasks/prd-[feature-name].md`.
+Answer the clarifying questions. The skill will:
+- Create a Linear project with the PRD as description
+- Create Linear issues for each user story
+- Save `.ralph-project` with the project configuration
 
-### 2. Convert PRD to Ralph format
+### 2. Or convert an existing PRD
 
-Use the Ralph skill to convert the markdown PRD to JSON:
+If you have an existing markdown PRD, use the Ralph skill to convert it:
 
 ```
-Load the ralph skill and convert tasks/prd-[feature-name].md to prd.json
+Load the ralph skill and convert tasks/prd-[feature-name].md to Linear
 ```
 
-This creates `prd.json` with user stories structured for autonomous execution.
+This creates a Linear project and issues from your markdown PRD.
 
 ### 3. Run Ralph
 
@@ -79,15 +86,18 @@ This creates `prd.json` with user stories structured for autonomous execution.
 
 Default is 10 iterations.
 
+On first run, if `.ralph-project` doesn't exist, Ralph will interactively prompt you to select or create a Linear project.
+
 Ralph will:
-1. Create a feature branch (from PRD `branchName`)
-2. Pick the highest priority story where `passes: false`
-3. Implement that single story
-4. Run quality checks (typecheck, tests)
-5. Commit if checks pass
-6. Update `prd.json` to mark story as `passes: true`
-7. Append learnings to `progress.txt`
-8. Repeat until all stories pass or max iterations reached
+1. Create a feature branch (from project description)
+2. Pick the highest priority issue with "Todo" status
+3. Mark it as "In Progress"
+4. Implement that single story
+5. Run quality checks (typecheck, tests)
+6. Commit if checks pass
+7. Mark issue as "Done"
+8. Add a comment with implementation details and learnings
+9. Repeat until all issues are done or max iterations reached
 
 ## Key Files
 
@@ -95,12 +105,60 @@ Ralph will:
 |------|---------|
 | `ralph.sh` | The bash loop that spawns fresh Amp instances |
 | `prompt.md` | Instructions given to each Amp instance |
-| `prd.json` | User stories with `passes` status (the task list) |
-| `prd.json.example` | Example PRD format for reference |
-| `progress.txt` | Append-only learnings for future iterations |
-| `skills/prd/` | Skill for generating PRDs |
-| `skills/ralph/` | Skill for converting PRDs to JSON |
+| `setup-prompt.md` | Interactive setup for Linear project selection |
+| `.ralph-project` | Local config with Linear project ID (gitignored) |
+| `skills/prd/` | Skill for generating PRDs in Linear |
+| `skills/ralph/` | Skill for converting markdown PRDs to Linear |
 | `flowchart/` | Interactive visualization of how Ralph works |
+
+## Linear Integration
+
+Ralph uses Linear MCP for all task management:
+
+| Old Approach | New Linear Approach |
+|--------------|---------------------|
+| `prd.json` | Linear Project (PRD in description) |
+| User stories in JSON | Linear Issues in the project |
+| `passes: true/false` | Issue status (Todo/In Progress/Done) |
+| `progress.txt` | Issue comments with learnings |
+| `priority: 1-4` | Linear Issue priority |
+
+### Issue Format
+
+User stories are stored in Linear issues with this description format:
+
+```markdown
+As a [user], I want [feature] so that [benefit].
+
+## Acceptance Criteria
+- [ ] Criterion 1
+- [ ] Criterion 2
+- [ ] Typecheck passes
+```
+
+### Learnings as Comments
+
+After completing a story, Ralph adds a comment to the Linear issue:
+
+```markdown
+## Implementation Complete
+
+**Thread:** https://ampcode.com/threads/...
+
+### What was implemented
+- Added new component
+- Updated database schema
+
+### Files changed
+- src/components/Feature.tsx
+- db/migrations/001_add_feature.sql
+
+### Learnings for future iterations
+- Pattern: Use existing Button component for actions
+- Gotcha: Must run migrations before typecheck
+```
+
+Future iterations read these comments to learn from past work.
 
 ## Flowchart
 
@@ -122,12 +180,12 @@ npm run dev
 
 Each iteration spawns a **new Amp instance** with clean context. The only memory between iterations is:
 - Git history (commits from previous iterations)
-- `progress.txt` (learnings and context)
-- `prd.json` (which stories are done)
+- Linear issues and comments (status and learnings)
+- AGENTS.md files (reusable patterns)
 
 ### Small Tasks
 
-Each PRD item should be small enough to complete in one context window. If a task is too big, the LLM runs out of context before finishing and produces poor code.
+Each issue should be small enough to complete in one context window. If a task is too big, the LLM runs out of context before finishing and produces poor code.
 
 Right-sized stories:
 - Add a database column and migration
@@ -162,18 +220,20 @@ Frontend stories must include "Verify in browser using dev-browser skill" in acc
 
 ### Stop Condition
 
-When all stories have `passes: true`, Ralph outputs `<promise>COMPLETE</promise>` and the loop exits.
+When all issues have "Done" status, Ralph outputs `<promise>COMPLETE</promise>` and the loop exits.
 
 ## Debugging
 
-Check current state:
+Check current state via Linear:
+- View the project in Linear to see issue status
+- Read issue comments for implementation learnings
+- Check git history for commits
+
+Or via command line:
 
 ```bash
-# See which stories are done
-cat prd.json | jq '.userStories[] | {id, title, passes}'
-
-# See learnings from previous iterations
-cat progress.txt
+# Check local project config
+cat .ralph-project
 
 # Check git history
 git log --oneline -10
@@ -186,11 +246,18 @@ Edit `prompt.md` to customize Ralph's behavior for your project:
 - Include codebase conventions
 - Add common gotchas for your stack
 
-## Archiving
+## Resetting for a New Feature
 
-Ralph automatically archives previous runs when you start a new feature (different `branchName`). Archives are saved to `archive/YYYY-MM-DD-feature-name/`.
+To start a new feature:
+
+1. Delete `.ralph-project` to clear the current project link
+2. Run `./ralph.sh` - it will prompt you to select or create a new project
+3. Or use the `/prd` skill to create a new PRD directly in Linear
+
+Previous work remains in Linear for reference.
 
 ## References
 
 - [Geoffrey Huntley's Ralph article](https://ghuntley.com/ralph/)
 - [Amp documentation](https://ampcode.com/manual)
+- [Linear MCP documentation](https://linear.app/docs/mcp)
