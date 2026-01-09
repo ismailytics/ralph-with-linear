@@ -44,7 +44,7 @@ Before starting work, check comments on recently completed issues in the same pr
 3. Look for "Learnings" sections in the comments
 4. Apply these patterns and avoid documented gotchas
 
-This replaces the Codebase Patterns section from progress.txt - learnings are now attached to Linear issues.
+Learnings are attached to Linear issues as comments, making them searchable and linked to specific stories.
 
 ## Progress Tracking via Linear Comments
 

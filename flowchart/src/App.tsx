@@ -37,17 +37,17 @@ const phaseColors: Record<Phase, { bg: string; border: string }> = {
 const allSteps: { id: string; label: string; description: string; phase: Phase }[] = [
   // Setup phase (vertical)
   { id: '1', label: 'You write a PRD', description: 'Define what you want to build', phase: 'setup' },
-  { id: '2', label: 'Convert to prd.json', description: 'Break into small user stories', phase: 'setup' },
+  { id: '2', label: 'Create Linear project', description: 'PRD as description, stories as issues', phase: 'setup' },
   { id: '3', label: 'Run ralph.sh', description: 'Starts the autonomous loop', phase: 'setup' },
   // Loop phase
-  { id: '4', label: 'Amp picks a story', description: 'Finds next passes: false', phase: 'loop' },
+  { id: '4', label: 'Amp picks an issue', description: 'Finds highest priority Todo', phase: 'loop' },
   { id: '5', label: 'Implements it', description: 'Writes code, runs tests', phase: 'loop' },
   { id: '6', label: 'Commits changes', description: 'If tests pass', phase: 'loop' },
-  { id: '7', label: 'Updates prd.json', description: 'Sets passes: true', phase: 'loop' },
-  { id: '8', label: 'Logs to progress.txt', description: 'Saves learnings', phase: 'loop' },
-  { id: '9', label: 'More stories?', description: '', phase: 'decision' },
+  { id: '7', label: 'Updates Linear issue', description: 'Sets status: Done', phase: 'loop' },
+  { id: '8', label: 'Adds comment to issue', description: 'Documents learnings', phase: 'loop' },
+  { id: '9', label: 'More issues?', description: '', phase: 'decision' },
   // Exit
-  { id: '10', label: 'Done!', description: 'All stories complete', phase: 'done' },
+  { id: '10', label: 'Done!', description: 'All issues complete', phase: 'done' },
 ];
 
 const notes = [
@@ -56,16 +56,14 @@ const notes = [
     appearsWithStep: 2,
     position: { x: 340, y: 100 },
     color: { bg: '#f5f0ff', border: '#8b5cf6' },
-    content: `{
-  "id": "US-001",
-  "title": "Add priority field to database",
-  "acceptanceCriteria": [
-    "Add priority column to tasks table",
-    "Generate and run migration",
-    "Typecheck passes"
-  ],
-  "passes": false
-}`,
+    content: `Linear Issue:
+"US-001: Add priority field"
+Status: Todo → In Progress → Done
+Priority: 1 (Urgent)
+
+Acceptance Criteria:
+- Add priority column
+- Typecheck passes`,
   },
   {
     id: 'note-2',
