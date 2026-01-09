@@ -1,4 +1,4 @@
-# Ralph
+# Ralph Advanced with Linear and Playwright
 
 ![Ralph](ralph.webp)
 
@@ -6,7 +6,11 @@ Ralph is an autonomous AI agent loop that runs [Amp](https://ampcode.com) repeat
 
 Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
 
-[Read my in-depth article on how I use Ralph](https://x.com/ryancarson/status/2008548371712135632)
+> **Fork Notice:** This project is a fork of [snarktank/ralph](https://github.com/snarktank/ralph) with the following modifications:
+> - **Linear MCP Integration**: Replaced file-based task management (`prd.json`, `progress.txt`) with [Linear MCP](https://linear.app/docs/mcp) for cloud-based project management
+> - **Playwright MCP Support**: Added Playwright MCP as primary browser testing tool with dev-browser as fallback
+> - **Optional TDD Workflow**: Added optional Test-Driven Development support with Red-Green-Refactor cycle
+> - **Interactive Setup**: Added `setup-prompt.md` for interactive Linear project selection
 
 ## Prerequisites
 
