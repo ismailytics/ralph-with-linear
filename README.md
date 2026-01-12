@@ -1,4 +1,4 @@
-# Ralph with Linear
+# Ralph with Claude Code, Linear & Playwright
 
 ![Ralph](ralph-computer.avif)
 
