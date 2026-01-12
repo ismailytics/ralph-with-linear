@@ -104,6 +104,26 @@ Ralph auto-detects available browser testing tools:
 
 Always document which tool was used in the Linear issue comment.
 
+### Playwright MCP Configuration
+
+For autonomous agents, use headless mode:
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--headless", "--isolated"]
+    }
+  }
+}
+```
+
+**Key flags:**
+- `--headless` - No GUI (required for autonomous operation)
+- `--isolated` - Browser profile in memory only
+- `--no-sandbox` - Required for Docker/CI environments
+
 ### TDD Workflow
 
 When acceptance criteria include "Tests written first (TDD)":

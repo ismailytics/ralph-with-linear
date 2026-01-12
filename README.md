@@ -135,6 +135,67 @@ Ralph auto-selects the best available browser testing tool:
 
 Add "Verify in browser" to acceptance criteria for UI stories.
 
+#### Playwright MCP Setup
+
+For autonomous operation, Playwright MCP must run in **headless mode**. This prevents browser windows from opening and allows parallel agent instances.
+
+**Installation via Claude Code CLI:**
+
+```bash
+claude mcp add playwright -- npx @playwright/mcp@latest --headless
+```
+
+**Manual configuration** (add to `~/.claude.json` or project `.mcp.json`):
+
+```json
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest", "--headless", "--isolated"]
+    }
+  }
+}
+```
+
+#### Configuration Flags
+
+| Flag | Purpose | When to Use |
+|------|---------|-------------|
+| `--headless` | No browser GUI | Always for autonomous agents |
+| `--isolated` | Profile in memory only | Avoid disk state between runs |
+| `--no-sandbox` | Disable sandboxing | Docker/CI environments |
+| `--port <port>` | HTTP transport | Remote server operation |
+| `--host 0.0.0.0` | Bind to all interfaces | Remote access |
+
+#### Environment-Specific Configurations
+
+**Local autonomous operation:**
+```json
+["@playwright/mcp@latest", "--headless", "--isolated"]
+```
+
+**Docker/CI pipeline:**
+```json
+["@playwright/mcp@latest", "--headless", "--no-sandbox"]
+```
+
+**Remote server:**
+```json
+["@playwright/mcp@latest", "--headless", "--port", "8931", "--host", "0.0.0.0"]
+```
+
+#### Why Headless for Autonomous Agents?
+
+- **No distractions** - Chrome windows don't pop up while you work
+- **Resource efficient** - Lower CPU/RAM usage
+- **Parallelizable** - Multiple agent instances can run simultaneously
+- **CI/CD compatible** - Works on servers without displays
+
+#### Verify Installation
+
+After setup, run `/mcp` in Claude Code and navigate to `playwright` to see available tools.
+
 ### Test-Driven Development
 
 Add "Tests written first (TDD)" to acceptance criteria to enable:
