@@ -1,170 +1,117 @@
-# Ralph Advanced with Linear and Playwright
+# Ralph with Linear
 
 ![Ralph](ralph-computer.avif)
 
-Ralph is an autonomous AI agent loop that runs [Claude Code](https://docs.anthropic.com/claude-code) repeatedly until all PRD items are complete. Each iteration is a fresh Claude Code instance with clean context. Memory persists via git history and Linear (projects, issues, and comments).
+Ralph is an autonomous AI agent that runs [Claude Code](https://docs.anthropic.com/claude-code) in a loop until all tasks are complete. Each iteration is a fresh Claude Code instance with clean context. Memory persists via git history and Linear (projects, issues, comments).
 
 Based on [Geoffrey Huntley's Ralph pattern](https://ghuntley.com/ralph/).
-
-> **Fork Notice:** This project is a fork of [snarktank/ralph](https://github.com/snarktank/ralph) with the following modifications:
-> - **Linear MCP Integration**: Replaced file-based task management (`prd.json`, `progress.txt`) with [Linear MCP](https://linear.app/docs/mcp) for cloud-based project management
-> - **Playwright MCP Support**: Added Playwright MCP as primary browser testing tool with dev-browser as fallback
-> - **Optional TDD Workflow**: Added optional Test-Driven Development support with Red-Green-Refactor cycle
-> - **Interactive Setup**: Added `setup-prompt.md` for interactive Linear project selection
 
 ## Prerequisites
 
 - [Claude Code CLI](https://docs.anthropic.com/claude-code) installed and authenticated
-- [Linear MCP](https://linear.app/docs/mcp) configured in your MCP settings
-- A git repository for your project
-- `jq` installed (for JSON parsing in scripts)
+- [Linear MCP](https://linear.app/docs/mcp) configured
+- [Superpowers](https://github.com/obra/superpowers) (recommended) or use the built-in `/prd` skill
+- `jq` installed (`brew install jq` on macOS)
 
 ## Quick Start
 
-**Important:** Run `ralph.sh` directly in your terminal, not inside Claude Code.
+**Important:** Always run `ralph.sh` from your project root, not from inside the ralph folder.
+
+### 1. Create a Plan
+
+Use the Superpowers brainstorm skill to create a `Plan.md`:
+
+```
+/superpowers:brainstorm [your feature idea]
+```
+
+**Alternative:** Use the built-in `/prd` skill if you don't have Superpowers installed.
+
+### 2. Create Linear Project from Plan
+
+Ask Claude Code to create a Linear project from your plan:
+
+```
+Create a Linear project from Plan.md with issues including labels, priorities, and dependencies. Set all issues to Todo status.
+```
+
+### 3. Initialize Ralph
 
 ```bash
-git clone https://github.com/ismailytics/ralph-with-linear.git
-cd ralph-with-linear
-./ralph.sh
+./ralph-with-linear/ralph.sh
 ```
 
-On first run, Ralph opens an interactive Claude Code session for setup (select/create Linear project). After setup completes, exit the Claude Code session, then run `./ralph.sh` again in your terminal to start the autonomous loop.
+This opens an interactive Claude Code session to select/create a Linear project. After setup completes, a `.ralph-project` file is created with the project configuration.
 
-## How Ralph Works
+### 4. Run the Autonomous Loop
 
-Ralph runs **inside your existing project**, not in a separate folder. When you run `./ralph.sh`:
-
-1. Creates a feature branch (e.g., `ralph/task-priority`)
-2. Implements changes directly in your codebase
-3. Commits to your git repository
-
-Ralph files (`ralph.sh`, `prompt.md`, etc.) live alongside your project code. The only Ralph-specific file is `.ralph-project`, which stores the Linear project configuration and is gitignored.
-
-## Setup
-
-### 1. Configure Linear MCP
-
-Follow the [Linear MCP documentation](https://linear.app/docs/mcp) to set up the Linear MCP server. This enables Ralph to read and write Linear projects and issues.
-
-### 2. Copy Ralph to Your Project (Optional)
-
-If you want to use Ralph in an existing project, copy these files to your project root:
+Open a **new terminal** and run:
 
 ```bash
-# From your project root
-cp /path/to/ralph-with-linear/ralph.sh .
-cp /path/to/ralph-with-linear/ralph-once.sh .
-cp /path/to/ralph-with-linear/prompt.md .
-cp /path/to/ralph-with-linear/setup-prompt.md .
-chmod +x ralph.sh ralph-once.sh
+./ralph-with-linear/ralph.sh [iterations]
 ```
 
-### 3. Install Skills
+**Tip:** Set iterations to the number of issues in your Linear project.
 
-Skills are included in `.claude/skills/`. Claude Code automatically discovers them when you run from this directory.
+### 5. Monitor and Review
 
-To install globally for use across all projects:
+- Track progress in Linear (issues move from Todo → In Progress → Done)
+- Ralph commits after each completed task
+- When done, run `/review` for a code review of unpushed commits
 
-```bash
-mkdir -p ~/.claude/skills
-cp -r .claude/skills/prd ~/.claude/skills/
-cp -r .claude/skills/ralph ~/.claude/skills/
-```
+## Recovery
 
-## Workflow
+If Ralph gets stuck or stops responding:
 
-### 1. Create a PRD
+1. Close the terminal
+2. Run `./ralph-with-linear/ralph.sh` again
 
-Use the `/prd` skill to generate a detailed requirements document directly in Linear:
+Ralph reads the current state from Linear and git, so it continues where it left off.
 
-```
-/prd [your feature description]
-```
+## How It Works
 
-Or simply describe what you want to build - Claude Code will automatically invoke the skill.
+Each iteration:
+1. Creates a feature branch (from project description)
+2. Picks the highest priority "Todo" issue
+3. Marks it "In Progress"
+4. Implements the task
+5. Runs quality checks (typecheck, tests, lint)
+6. Commits if all checks pass
+7. Marks issue "Done" and adds a comment with learnings
+8. Repeats until all issues are done
 
-Answer the clarifying questions. The skill will:
-- Create a Linear project with the PRD as description
-- Create Linear issues for each user story
-- Save `.ralph-project` with the project configuration
+## Run Modes
 
-### 2. Or Convert an Existing PRD
+| Mode | Command | Use Case |
+|------|---------|----------|
+| **HITL** (human-in-the-loop) | `./ralph-with-linear/ralph-once.sh` | Learning, watching Ralph work |
+| **AFK** (away from keyboard) | `./ralph-with-linear/ralph.sh [n]` | Bulk work, overnight runs |
 
-If you have an existing markdown PRD, use the `/ralph` skill to convert it:
+Start with HITL to understand how Ralph works, then switch to AFK.
 
-```
-/ralph tasks/prd-[feature-name].md
-```
-
-This creates a Linear project and issues from your markdown PRD.
-
-### 3. Run Ralph
-
-**Important:** Always run Ralph in your terminal, not inside Claude Code. Ralph spawns new Claude Code instances, which doesn't work when nested inside an existing session.
-
-On first run, if `.ralph-project` doesn't exist, Ralph opens an interactive Claude Code session for setup. After completing setup:
-1. Exit the Claude Code session
-2. Run `./ralph.sh` again in your terminal
-
-There are two modes for running Ralph:
-
-| Mode | Script | Best For |
-|------|--------|----------|
-| **HITL** (human-in-the-loop) | `ralph-once.sh` | Learning, prompt refinement, watching Ralph work |
-| **AFK** (away from keyboard) | `ralph.sh` | Bulk work, low-risk tasks, overnight runs |
-
-**HITL Mode** - Single iteration, you watch and intervene:
-```bash
-./ralph-once.sh
-```
-
-**AFK Mode** - Multiple iterations, runs autonomously:
-```bash
-./ralph.sh [max_iterations]  # Default: 10
-```
-
-Start with HITL to learn and refine your prompt. Go AFK once you trust it.
-
-Ralph will:
-1. Create a feature branch (from project description)
-2. Pick the highest priority issue with "Todo" status
-3. Mark it as "In Progress"
-4. Implement that single story
-5. Run quality checks (typecheck, tests, lint)
-6. Commit if ALL checks pass
-7. Mark issue as "Done"
-8. Add a comment with implementation details and learnings
-9. Repeat until all issues are done or max iterations reached
-
-## Key Files
+## File Structure
 
 | File | Purpose |
 |------|---------|
-| `ralph.sh` | AFK mode - loops through iterations autonomously |
-| `ralph-once.sh` | HITL mode - single iteration for learning/refinement |
-| `prompt.md` | Instructions given to each Claude Code instance |
-| `setup-prompt.md` | Interactive setup for Linear project selection |
+| `ralph.sh` | Main loop script (AFK mode) |
+| `ralph-once.sh` | Single iteration (HITL mode) |
+| `prompt.md` | Instructions for each Claude Code instance |
+| `setup-prompt.md` | Interactive Linear project selection |
 | `.ralph-project` | Local config with Linear project ID (gitignored) |
-| `.claude/skills/prd/` | Skill for generating PRDs in Linear (`/prd`) |
-| `.claude/skills/ralph/` | Skill for converting markdown PRDs to Linear (`/ralph`) |
-| `flowchart/` | Interactive visualization of how Ralph works |
 
 ## Linear Integration
 
-Ralph uses Linear MCP for all task management:
+Ralph uses Linear MCP for task management:
 
-| Old Approach | New Linear Approach |
-|--------------|---------------------|
-| `prd.json` | Linear Project (PRD in description) |
-| User stories in JSON | Linear Issues in the project |
-| `passes: true/false` | Issue status (Todo/In Progress/Done) |
-| `progress.txt` | Issue comments with learnings |
-| `priority: 1-4` | Linear Issue priority |
+| Concept | Linear Equivalent |
+|---------|-------------------|
+| PRD | Project description |
+| User stories | Issues |
+| Task status | Issue status (Todo/In Progress/Done) |
+| Learnings | Issue comments |
+| Priority | Issue priority (Urgent/High/Normal/Low) |
 
 ### Issue Format
-
-User stories are stored in Linear issues with this description format:
 
 ```markdown
 As a [user], I want [feature] so that [benefit].
@@ -175,146 +122,60 @@ As a [user], I want [feature] so that [benefit].
 - [ ] Typecheck passes
 ```
 
-### Learnings as Comments
+## Advanced Features
 
-After completing a story, Ralph adds a comment to the Linear issue:
+### Browser Testing
 
-```markdown
-## Implementation Complete
+Ralph auto-selects the best available browser testing tool:
 
-### What was implemented
-- Added new component
-- Updated database schema
+| Tool | When Used |
+|------|-----------|
+| Playwright MCP | When `mcp__playwright__*` tools available |
+| dev-browser skill | Fallback |
 
-### Files changed
-- src/components/Feature.tsx
-- db/migrations/001_add_feature.sql
+Add "Verify in browser" to acceptance criteria for UI stories.
 
-### Learnings for future iterations
-- Pattern: Use existing Button component for actions
-- Gotcha: Must run migrations before typecheck
+### Test-Driven Development
+
+Add "Tests written first (TDD)" to acceptance criteria to enable:
+
+1. **RED:** Write failing test → commit
+2. **GREEN:** Implement minimum code
+3. **REFACTOR:** Clean up → commit
+
+### Customizing Behavior
+
+Edit `prompt.md` to customize:
+- Quality check commands
+- Codebase conventions
+- Stack-specific gotchas
+
+## Alternative: Using /prd Skill
+
+If you don't have Superpowers, use the built-in `/prd` skill:
+
+```
+/prd [your feature description]
 ```
 
-Future iterations read these comments to learn from past work.
+This guides you through:
+1. Clarifying questions
+2. Linear team selection
+3. Project and issue creation
+4. `.ralph-project` configuration
 
-## Flowchart
+## Tips
 
-[![Ralph Flowchart](ralph-flowchart.png)](https://ismailytics.github.io/ralph-with-linear/)
+- **Small tasks:** Each issue should complete in one context window. Split large tasks.
+- **CLAUDE.md updates:** Ralph updates these files with learnings for future iterations.
+- **Feedback loops:** Ensure typecheck and tests work - broken code compounds across iterations.
 
-**[View Interactive Flowchart](https://ismailytics.github.io/ralph-with-linear/)** - Click through to see each step with animations.
-
-The `flowchart/` directory contains the source code. To run locally:
-
-```bash
-cd flowchart
-npm install
-npm run dev
-```
-
-## Critical Concepts
-
-### Each Iteration = Fresh Context
-
-Each iteration spawns a **new Claude Code instance** with clean context. The only memory between iterations is:
-- Git history (commits from previous iterations)
-- Linear issues and comments (status and learnings)
-- CLAUDE.md files (reusable patterns)
-
-### Small Tasks
-
-Each issue should be small enough to complete in one context window. If a task is too big, the LLM runs out of context before finishing and produces poor code.
-
-Right-sized stories:
-- Add a database column and migration
-- Add a UI component to an existing page
-- Update a server action with new logic
-- Add a filter dropdown to a list
-
-Too big (split these):
-- "Build the entire dashboard"
-- "Add authentication"
-- "Refactor the API"
-
-### CLAUDE.md Updates Are Critical
-
-After each iteration, Ralph updates the relevant `CLAUDE.md` files with learnings. This is key because Claude Code automatically reads these files, so future iterations (and future human developers) benefit from discovered patterns, gotchas, and conventions.
-
-Examples of what to add to CLAUDE.md:
-- Patterns discovered ("this codebase uses X for Y")
-- Gotchas ("do not forget to update Z when changing W")
-- Useful context ("the settings panel is in component X")
-
-### Feedback Loops
-
-Ralph only works if there are feedback loops:
-- Typecheck catches type errors
-- Tests verify behavior
-- CI must stay green (broken code compounds across iterations)
-
-### Browser Verification for UI Stories
-
-Frontend stories must include "Verify in browser" in acceptance criteria. Ralph auto-selects the best available tool:
-
-| Tool | When Used | Type |
-|------|-----------|------|
-| Playwright MCP | `mcp__playwright__*` tools available | Automated E2E testing |
-| dev-browser skill | Fallback when Playwright unavailable | Manual visual verification |
-
-The agent documents which tool was used in the Linear issue comment.
-
-### Test-Driven Development (Optional)
-
-For stories with complex business logic, you can add "Tests written first (TDD)" to acceptance criteria. This triggers a Red-Green-Refactor cycle:
-
-1. **RED**: Write failing test, commit as `test: [Issue-ID] - Add failing test`
-2. **GREEN**: Implement minimum code to pass test
-3. **REFACTOR**: Clean up, commit as `feat: [Issue-ID] - [Title]`
-
-TDD is recommended for:
-- Complex business logic
-- Utility functions and algorithms
-- APIs with defined contracts
-
-TDD is optional for:
-- Simple UI changes
-- Configuration updates
-- Documentation
-
-### Stop Condition
-
-When all issues have "Done" status, Ralph outputs `<promise>COMPLETE</promise>` and the loop exits.
-
-## Debugging
-
-Check current state via Linear:
-- View the project in Linear to see issue status
-- Read issue comments for implementation learnings
-- Check git history for commits
-
-Or via command line:
-
-```bash
-# Check local project config
-cat .ralph-project
-
-# Check git history
-git log --oneline -10
-```
-
-## Customizing prompt.md
-
-Edit `prompt.md` to customize Ralph's behavior for your project:
-- Add project-specific quality check commands
-- Include codebase conventions
-- Add common gotchas for your stack
-
-## Resetting for a New Feature
+## Resetting
 
 To start a new feature:
 
-1. Delete `.ralph-project` to clear the current project link
-2. Run `./ralph.sh` - it will prompt you to select or create a new project
-3. Or use the `/prd` skill to create a new PRD directly in Linear
+1. Delete `.ralph-project`
+2. Run `./ralph-with-linear/ralph.sh` to set up a new project
 
 Previous work remains in Linear for reference.
 
@@ -323,3 +184,4 @@ Previous work remains in Linear for reference.
 - [Geoffrey Huntley's Ralph article](https://ghuntley.com/ralph/)
 - [Claude Code documentation](https://docs.anthropic.com/claude-code)
 - [Linear MCP documentation](https://linear.app/docs/mcp)
+- [Superpowers](https://github.com/obra/superpowers)

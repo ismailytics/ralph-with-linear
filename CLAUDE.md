@@ -15,13 +15,7 @@ Ralph is an autonomous AI agent loop that runs Claude Code repeatedly until all 
 
 ```bash
 # In your terminal (not in Claude Code)
-./ralph.sh [max_iterations]
-
-# Run the flowchart dev server
-cd flowchart && npm run dev
-
-# Build the flowchart
-cd flowchart && npm run build
+./ralph-with-linear/ralph.sh [max_iterations]
 ```
 
 ## Key Files
@@ -30,7 +24,6 @@ cd flowchart && npm run build
 - `prompt.md` - Instructions given to each Claude Code instance
 - `setup-prompt.md` - Interactive Linear project selection
 - `.ralph-project` - Local config with Linear project ID (gitignored)
-- `flowchart/` - Interactive React Flow diagram explaining how Ralph works
 - `.claude/skills/prd/SKILL.md` - PRD generation skill
 - `.claude/skills/ralph/SKILL.md` - PRD-to-Linear converter skill
 
@@ -88,17 +81,6 @@ mcp__linear-server__list_comments - Read learnings from completed issues
 | 2nd      | 2 (High)        |
 | 3rd      | 3 (Normal)      |
 | 4th+     | 4 (Low)         |
-
-## Flowchart
-
-The `flowchart/` directory contains an interactive visualization built with React Flow. It's designed for presentations - click through to reveal each step with animations.
-
-To run locally:
-```bash
-cd flowchart
-npm install
-npm run dev
-```
 
 ## Patterns
 
